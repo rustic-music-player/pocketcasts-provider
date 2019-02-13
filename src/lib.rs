@@ -1,4 +1,5 @@
 extern crate pocketcasts;
+#[macro_use]
 extern crate failure;
 extern crate rustic_core as rustic;
 extern crate serde;
@@ -43,7 +44,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
     fn uri_scheme(&self) -> &'static str { "pocketcasts" }
 
     fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
-        let client = self.client.clone().unwrap();
+        let client = self.client.clone().ok_or_else(|| format_err!("Pocketcasts not setup"))?;
         let podcasts = client.get_subscriptions()?;
         let albums = podcasts.len();
         let mut episodes: Vec<Track> = podcasts
