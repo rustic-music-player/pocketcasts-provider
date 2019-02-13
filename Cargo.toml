@@ -11,7 +11,7 @@ log = "0.4"
 rayon = "1.0"
 
 [dependencies.rustic-core]
-git = "https://github.com/rustic-music-player/core"
+path = "../../core"
 
 [dependencies.pocketcasts]
 git = "https://github.com/maxjoehnk/pocketcasts-rs"
