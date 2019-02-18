@@ -18,7 +18,7 @@ use rayon::prelude::*;
 use pocketcasts::{Podcast, Episode, PocketcastClient};
 use failure::Error;
 use episode::PocketcastTrack;
-use podcast::{PocketcastAlbum, PocketcastAlbums};
+use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PocketcastsProvider {
@@ -51,7 +51,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
             .par_iter()
             .cloned()
             .map(|podcast| {
-                let episodes = client.get_episodes(&podcast)?;
+                let episodes = client.get_episodes(&podcast.uuid)?;
                 Ok((podcast, episodes))
             })
             .filter(|result: &Result<(Podcast, Vec<Episode>), Error>| {
@@ -109,9 +109,9 @@ impl provider::ProviderInstance for PocketcastsProvider {
         let client = self.client.clone().unwrap();
         let podcasts = match path[0].as_str() {
             "Subscriptions" => Ok(self.client.clone().unwrap().get_subscriptions()),
-            "Top Charts" => Ok(PocketcastClient::get_top_charts()),
-            "Featured" => Ok(PocketcastClient::get_featured()),
-            "Trending" => Ok(PocketcastClient::get_trending()),
+//            "Top Charts" => Ok(PocketcastClient::get_top_charts()),
+//            "Featured" => Ok(PocketcastClient::get_featured()),
+//            "Trending" => Ok(PocketcastClient::get_trending()),
             _ => Err(Error::from(provider::NavigationError::PathNotFound))
         }?;
         match path.len() {
@@ -124,7 +124,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
                     .find(|podcast| podcast.title == path[1])
                     .ok_or(provider::NavigationError::PathNotFound)
                     .map_err(Error::from)
-                    .and_then(|podcast| client.get_episodes(&podcast)
+                    .and_then(|podcast| client.get_episodes(&podcast.uuid)
                         .map_err(|_err| Error::from(provider::NavigationError::FetchError)))
                     .map(|episodes| {
                         episodes
@@ -152,7 +152,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
         let podcasts = client.search_podcasts(query)?;
         let podcasts = podcasts
             .into_iter()
-            .map(PocketcastAlbum::from)
+            .map(PocketcastSearchResult::from)
             .map(Album::from)
             .map(provider::ProviderItem::from)
             .collect();

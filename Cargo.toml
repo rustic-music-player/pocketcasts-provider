@@ -14,4 +14,4 @@ rayon = "1.0"
 path = "../../core"
 
 [dependencies.pocketcasts]
-git = "https://github.com/maxjoehnk/pocketcasts-rs"
+path = "../../dependencies/pocketcasts"
