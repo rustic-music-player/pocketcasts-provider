@@ -8,6 +8,8 @@ extern crate serde_derive;
 #[macro_use]
 extern crate log;
 extern crate rayon;
+#[macro_use]
+extern crate maplit;
 
 mod episode;
 mod podcast;

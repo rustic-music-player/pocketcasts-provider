@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+use pocketcasts::Episode;
 use rustic::library::Track;
 use rustic::provider::Provider;
-use pocketcasts::Episode;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PocketcastTrack(Episode);
@@ -19,7 +20,8 @@ impl From<PocketcastTrack> for Track {
             provider: Provider::Pocketcasts,
             uri: format!("pocketcasts://episode/{}", episode.uuid),
             image_url: None,
-            duration: Some(episode.duration)
+            duration: Some(episode.duration),
+            meta: HashMap::new()
         }
     }
 }
