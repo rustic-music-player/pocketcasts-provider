@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use pocketcasts::{Podcast, SearchPodcast};
-use rustic::library::{Album, Artist, MetaValue};
+use rustic::library::{Album, Artist};
 use rustic::provider::{Provider, ProviderFolder};
 
-pub const META_POCKETCASTS_PODCAST_UUID: &'static str = "POCKETCASTS_PODCAST_UUID";
+use meta::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PocketcastAlbum(Podcast);

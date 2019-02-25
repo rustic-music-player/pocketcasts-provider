@@ -1,33 +1,35 @@
-extern crate pocketcasts;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate maplit;
+extern crate pocketcasts;
+extern crate rayon;
 extern crate rustic_core as rustic;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
-extern crate log;
-extern crate rayon;
-#[macro_use]
-extern crate maplit;
+
+use failure::Error;
+use rayon::prelude::*;
+
+use episode::PocketcastTrack;
+use pocketcasts::{Episode, PocketcastClient, Podcast};
+use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
+use rustic::library::{Album, Artist, SharedLibrary, Track};
+use rustic::provider;
 
 mod episode;
 mod podcast;
-
-use rustic::provider;
-use rustic::library::{Track, SharedLibrary, Album, Artist};
-use rayon::prelude::*;
-use pocketcasts::{Podcast, Episode, PocketcastClient};
-use failure::Error;
-use episode::PocketcastTrack;
-use podcast::{PocketcastAlbum, PocketcastAlbums, PocketcastSearchResult};
+mod meta;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PocketcastsProvider {
     email: String,
     password: String,
     #[serde(skip)]
-    client: Option<PocketcastClient>
+    client: Option<PocketcastClient>,
 }
 
 impl provider::ProviderInstance for PocketcastsProvider {
@@ -44,6 +46,10 @@ impl provider::ProviderInstance for PocketcastsProvider {
     }
 
     fn uri_scheme(&self) -> &'static str { "pocketcasts" }
+
+    fn provider(&self) -> provider::Provider {
+        provider::Provider::Pocketcasts
+    }
 
     fn sync(&mut self, library: SharedLibrary) -> Result<provider::SyncResult, Error> {
         let client = self.client.clone().ok_or_else(|| format_err!("Pocketcasts not setup"))?;
@@ -91,7 +97,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
             tracks,
             albums,
             artists: albums,
-            playlists: 0
+            playlists: 0,
         })
     }
 
@@ -103,7 +109,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
                 "Featured".to_owned(),
                 "Trending".to_owned()
             ],
-            items: vec![]
+            items: vec![],
         }
     }
 
@@ -141,7 +147,7 @@ impl provider::ProviderInstance for PocketcastsProvider {
                     .map(|items| {
                         provider::ProviderFolder {
                             folders: vec![],
-                            items
+                            items,
                         }
                     })
             }),
@@ -163,5 +169,17 @@ impl provider::ProviderInstance for PocketcastsProvider {
 
     fn resolve_track(&self, _uri: &str) -> Result<Option<Track>, Error> {
         Ok(None)
+    }
+
+    fn stream_url(&self, track: &Track) -> Result<String, Error> {
+        if track.provider == provider::Provider::Pocketcasts {
+            if let rustic::library::MetaValue::String(stream_url) = track.meta.get(meta::META_POCKETCASTS_STREAM_URL).unwrap() {
+                return Ok(stream_url.to_string());
+            }
+
+            return Err(format_err!("Can't get stream url from track, meta value incompatible"));
+        }
+
+        Err(format_err!("Invalid provider: {:?}", track.provider))
     }
 }

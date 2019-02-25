@@ -1,7 +1,8 @@
-use std::collections::HashMap;
 use pocketcasts::Episode;
 use rustic::library::Track;
 use rustic::provider::Provider;
+
+use meta::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PocketcastTrack(Episode);
@@ -16,12 +17,13 @@ impl From<PocketcastTrack> for Track {
             artist: None,
             album_id: None,
             album: None,
-            stream_url: episode.url,
             provider: Provider::Pocketcasts,
             uri: format!("pocketcasts://episode/{}", episode.uuid),
             image_url: None,
             duration: Some(episode.duration),
-            meta: HashMap::new()
+            meta: hashmap!(
+                META_POCKETCASTS_STREAM_URL => episode.url.into()
+            )
         }
     }
 }
