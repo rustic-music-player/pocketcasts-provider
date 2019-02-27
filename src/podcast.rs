@@ -1,6 +1,10 @@
+use std::collections::HashMap;
+
 use pocketcasts::{Podcast, SearchPodcast};
 use rustic::library::{Album, Artist};
 use rustic::provider::{Provider, ProviderFolder};
+
+use meta::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PocketcastAlbum(Podcast);
@@ -15,6 +19,7 @@ impl From<PocketcastAlbum> for Album {
     fn from(podcast: PocketcastAlbum) -> Album {
         let podcast = podcast.0;
         let thumbnail_url = podcast.thumbnail_url();
+        let id = podcast.uuid.clone();
         Album {
             id: None,
             title: podcast.title,
@@ -24,10 +29,16 @@ impl From<PocketcastAlbum> for Album {
                 uri: format!("pocketcasts://interpret/{}", podcast.author),
                 name: podcast.author,
                 image_url: None,
+                meta: hashmap!(
+                    META_POCKETCASTS_PODCAST_UUID => id.clone().into()
+                ),
             }),
             provider: Provider::Pocketcasts,
             image_url: Some(thumbnail_url),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
+            meta: hashmap!(
+                META_POCKETCASTS_PODCAST_UUID => id.into()
+            ),
         }
     }
 }
@@ -40,6 +51,7 @@ impl From<PocketcastAlbum> for Artist {
             uri: format!("pocketcasts://interpret/{}", podcast.author),
             name: podcast.author,
             image_url: None,
+            meta: HashMap::new(),
         }
     }
 }
@@ -70,10 +82,12 @@ impl From<PocketcastSearchResult> for Album {
                 uri: format!("pocketcasts://interpret/{}", podcast.author),
                 name: podcast.author,
                 image_url: None,
+                meta: HashMap::new(),
             }),
             provider: Provider::Pocketcasts,
             image_url: Some(thumbnail_url),
             uri: format!("pocketcasts://podcast/{}", podcast.uuid),
+            meta: HashMap::new(),
         }
     }
 }
@@ -83,6 +97,7 @@ impl From<Podcast> for PocketcastAlbum {
         PocketcastAlbum(podcast)
     }
 }
+
 impl From<Vec<Podcast>> for PocketcastAlbums {
     fn from(podcasts: Vec<Podcast>) -> Self {
         PocketcastAlbums(podcasts)
